@@ -11,6 +11,7 @@ library(shiny)
 library(mosaic)
 library(nycflights13)
 library(shinycssloaders) # Added package for spinner (see below)
+library(shinydashboard)  # For a nicer looking layout out of the box
 data(flights)
 
 
@@ -31,296 +32,311 @@ entpop_sdtrue <- sd(~Entfernung, data = flights)
 # Calculate standard error for 50-Obs Sample data
 verpop_se50 =  verpop_sdtrue / sqrt(50)
 entpop_se50 =  entpop_sdtrue / sqrt(50)
-# Calculate standard error for 500-Obs Sample data
-verpop_se500 =  verpop_sdtrue / sqrt(500)
-entpop_se500 =  entpop_sdtrue / sqrt(500)
 
 
 xlims <- c(0,5500)
 
 # Calculate fixed x-limits as 6 times the standard error for 50-Obs Sample data
-xlims2ver50 <- c((verpop-6*verpop_se50),(verpop+6*verpop_se50))
-xlims2ent50 <- c((entpop-6*entpop_se50),(entpop+6*entpop_se50))
-# Calculate fixed x-limits as 6 times the standard error for 500-Obs Sample data
-xlims2ver500 <- c((verpop-6*verpop_se500),(verpop+6*verpop_se500))
-xlims2ent500 <- c((entpop-6*entpop_se500),(entpop+6*entpop_se500))
+xlims_ver50 <- c((verpop-6*verpop_se50),(verpop+6*verpop_se50))
+xlims_ent50 <- c((entpop-6*entpop_se50),(entpop+6*entpop_se50))
 
 # ui section
-ui <- navbarPage(title = "Sampling",
-                 tabPanel("Hintergrund", 
-                          fluidPage(
-                            titlePanel("FOMshiny: Sampling"),
-                            fluidRow(column(12, h3("Hintergrund"))),
-                            fluidRow(column(12, "Im R Paket nycflights13 liegen alle abgehenden Flüge aus New York City innerhalb der USA aus dem Jahr 2013 vor.")),
-                            fluidRow(column(12, "Der Datensatz wurde eingeschränkt auf den Flughafen JFK, so dass insgesamt N=109079 Beobachtungen vorliegen.")),
-                            fluidRow(column(12, "Ein Flug wurde als verspätet klassifiziert, wenn er mehr als 10min Verspätung hatte.")),
-                            fluidRow(column(12, h3("Population"))),
-                            fluidRow(column(12, "Hier sehen Sie die Verteilung der Entfernung des Fluges, so wie ob dieser verspätet ankam.")),
-                            fluidRow(column(12, h3("Stichprobe n=50"))),
-                            fluidRow(column(12, "Auf der linken Seite sehen Sie die Verteilung einer zufälligen Stichprobe mit n=50.")),
-                            fluidRow(column(12, "Auf der rechten Seite können Sie die Stichprobenverteilung, d.h. die Verteilung des Mittelwertes bzw. des Anteils über die zufälligen Stichproben entwickeln.")),
-                            fluidRow(column(12, "Der rote Strich ist der Mittelwert bzw. Anteil der aktuellen Stichprobe, der blaue der der Population.")),
-                            fluidRow(column(12, h3("Stichprobe n=500"))),
-                            fluidRow(column(12, "Auf der linken Seite sehen Sie die Verteilung einer zufälligen Stichprobe mit n=500.")),
-                            fluidRow(column(12, "Auf der rechten Seite können Sie die Stichprobenverteilung, d.h. die Verteilung des Mittelwertes bzw. des Anteils über die zufälligen Stichproben entwickeln.")),
-                            fluidRow(column(12, "Der rote Strich ist der Mittelwert bzw. Anteil der aktuellen Stichprobe, der blaue der der Population.")),
-                            fluidRow(column(12, h4("Hinweise:"))),
-                            fluidRow(column(12, "Worin unterscheiden sich die Stichprobenverteilung mit n=50 und n=500?")),
-                            fluidRow(column(12, "Gegen welche Verteilungsform entwickeln sich die Stichprobenverteilungen?"))
-                          )),
-                 
-
-                 tabPanel("Population", 
-                          fluidPage(
-                            titlePanel("Verteilung Population"),
-                            fluidRow(column(12, h3("Verteilung Entfernung"))),
-                            fluidRow(column(12, plotOutput("PlotOriginalEnt") %>% withSpinner(color = '#387F72'))), # Spinner while figure is loading
-                            fluidRow(column(12, h3("Verteilung Verspätung"))),
-                            fluidRow(column(12, plotOutput("PlotOriginalVer") %>% withSpinner(color = '#387F72')))  # Spinner while figure is loading
-                          )
-                 ),
-                 
-                 tabPanel("Stichprobe n=50", 
-                          fluidRow(actionButton("SampleGo50", "Sample!", icon = icon("refresh"))),
-                          splitLayout(
-                          fluidPage(
-                            titlePanel("Stichprobe n=50"),
-                            fluidRow(column(12, h3("Entfernung Stichprobe"))),
-                            fluidRow(column(12, plotOutput("PlotEnt50"))),
-                            fluidRow(column(12, h3("Verspätung Stichprobe"))),
-                            fluidRow(column(12, plotOutput("PlotVer50")))
-                            ),
-                          fluidPage(
-                            titlePanel("Stichprobenverteilung n=50"),
-                            fluidRow(column(12, h3("Verteilung Mittelwert Entfernung"))),
-                            fluidRow(column(12, plotOutput("PlotMeanEnt50"))),
-                            fluidRow(column(12, h3("Verteilung Anteil Verspätung"))),
-                            fluidRow(column(12, plotOutput("PlotMeanVer50")))
-                            )
-                          )
-                    ),
-                 tabPanel("Stichprobe n=500", 
-                          fluidRow(actionButton("SampleGo500", "Sample!", icon = icon("refresh"))),
-                          splitLayout(
-                            fluidPage(
-                              titlePanel("Stichprobe n=500"),
-                              fluidRow(column(12, h3("Entfernung Stichprobe"))),
-                              fluidRow(column(12, plotOutput("PlotEnt500"))),
-                              fluidRow(column(12, h3("Verspätung Stichprobe"))),
-                              fluidRow(column(12, plotOutput("PlotVer500")))
-                            ),
-                            fluidPage(
-                              titlePanel("Stichprobenverteilung n=500"),
-                              fluidRow(column(12, h3("Verteilung Mittelwert Entfernung"))),
-                              fluidRow(column(12, plotOutput("PlotMeanEnt500"))),
-                              fluidRow(column(12, h3("Verteilung Anteil Verspätung"))),
-                              fluidRow(column(12, plotOutput("PlotMeanVer500")))
-                            )
-                          )
-                 )                
+ui = dashboardPage(
+  dashboardHeader(title = "FOM-Lehrapp: Sampling",titleWidth = 300),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Population", tabName = "Population",icon = icon('tachometer')),
+      menuItem("Sample Verspätungen (Anteil)", tabName = "Sample_prop",icon = icon('tachometer')),
+      menuItem("Sample Entfernung (Mittelwert)", tabName = "Sample_mean",icon = icon('tachometer'))
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem("Population",
+        fluidRow(
+          box(
+            width = 12,
+            status = "info", solidHeader = TRUE,
+            title = "Hintergrund",
+            p("Im R Paket nycflights13 liegen alle abgehenden Flüge aus New York City innerhalb der USA aus dem Jahr 2013 vor. 
+              Der Datensatz wurde eingeschränkt auf den Flughafen JFK, so dass insgesamt N=109079 Beobachtungen vorliegen. Ein 
+              Flug wurde als verspätet klassifiziert, wenn er mehr als 10min Verspätung hatte.", br(),
+              "Hier sehen Sie die Verteilung der Entfernung des Fluges, so wie ob dieser verspätet ankam.")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 12,
+            status = "primary", solidHeader = TRUE,
+            title = "Verteilung Verspätung",
+            plotOutput("PlotOriginalVer") %>% withSpinner(color = '#387F72')  # With spinner while figure is loading
+          )
+        ),
+        fluidRow(
+          box(
+            width = 12, 
+            status = "primary", solidHeader = TRUE,
+            title = "Verteilung Entfernung",
+            plotOutput("PlotOriginalEnt") %>% withSpinner(color = '#387F72')  # With spinner while figure is loading
+          )
+        )
+      ),
+      tabItem("Sample_prop",
+      fluidRow(
+          box(
+            width = 12,
+            status = "info", solidHeader = TRUE,
+            title = "Hintergrund",
+            p("Im R Paket nycflights13 liegen alle abgehenden Flüge aus New York City innerhalb der USA aus dem Jahr 2013 vor. 
+              Der Datensatz wurde eingeschränkt auf den Flughafen JFK, so dass insgesamt N=109079 Beobachtungen vorliegen. Ein 
+              Flug wurde als verspätet klassifiziert, wenn er mehr als 10min Verspätung hatte.", br(),
+              "Hier sehen Sie die Verteilung der Entfernung des Fluges, so wie ob dieser verspätet ankam.")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 4, height = 250,
+            status = "info", solidHeader = TRUE,
+            title = "Stichprobenziehung 50 Flüge",
+            p("Ziehe eine Stichprobe von 50 Flügen aus der Population und schaue dir an wie hoch der Anteil der Verspätungen in dieser Stichprobe ist:"),
+            actionButton("SampleGo50_ver", "Sample!", icon = icon("refresh"))
+          ),
+          box(
+            width = 4, height = 250,
+            status = "info", solidHeader = TRUE,
+            title = "Stichprobenziehung 500 Flüge",
+            p("Was passiert wenn du in deiner Stichprobe nicht 50 sondern 500 Flüge ziehst? Probiere es aus indem du Stichproben mit 500 Flügen ziehst."),
+            actionButton("SampleGo500_ver", "Sample!", icon = icon("refresh"))
+          ),
+          box(
+            width = 4, height = 250,
+            status = "warning", solidHeader = TRUE,
+            title = "Erklärung",
+            p("Was passiert hier genau?")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 6,
+            status = "primary", solidHeader = TRUE,
+            title = "Verteilung Verspätungen in aktueller Stichprobe",
+              plotOutput("PlotSampleVer")
+          ),
+          box(
+            width = 6,
+            status = "primary", solidHeader = TRUE,
+            title = "Anteil Verspätungen aller Stichproben",
+            plotOutput("PlotPropsVer")
+          )
+        )
+      ),
+      tabItem("Sample_mean",
+        fluidRow(
+          box(
+            width = 4, height = 250,
+            status = "info", solidHeader = TRUE,
+            title = "Stichprobenziehung 50 Flüge",
+            p("Ziehe eine Stichprobe von 50 Flügen aus der Population und schaue dir an wie hoch der Anteil der Verspätungen in dieser Stichprobe ist:"),
+            actionButton("SampleGo50_ent", "Sample!", icon = icon("refresh"))
+          ),
+          box(
+            width = 4, height = 250,
+            status = "info", solidHeader = TRUE,
+            title = "Stichprobenziehung 500 Flüge",
+            p("Was passiert wenn du in deiner Stichprobe nicht 50 sondern 500 Flüge ziehst? Probiere es aus indem du Stichproben mit 500 Flügen ziehst."),
+            actionButton("SampleGo500_ent", "Sample!", icon = icon("refresh"))
+          ),
+          box(
+            width = 4, height = 250,
+            status = "warning", solidHeader = TRUE,
+            title = "Erklärung",
+            p("Was passiert hier genau?")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 6,
+            status = "primary", solidHeader = TRUE,
+            title = "Verteilung Entfernungen in aktueller Stichprobe",
+            plotOutput("PlotSampleEnt")
+          ),
+          box(
+            width = 6,
+            status = "primary", solidHeader = TRUE,
+            title = "Mittelwert Entfernungen aller Stichproben",
+            plotOutput("PlotMeansEnt")
+          )
+        )
+      )
+    )
+  )
 )
 
 
 
+
 # server section
-server = function(input, output) {
+server = function(input, output, session) {
   
-options(warn=-1)
+  # For debugging
+  options(shiny.fullstacktrace = TRUE)
+  options(shiny.trace = TRUE)
   
-werte50 <- reactiveValues()
-werte500 <- reactiveValues()
-
-res50 <- observe({
-  if (input$SampleGo50) {
-    sam50 <- sample(flights,50)
-    
+  # Set reactive value objects
+  werte_ver <- reactiveValues()
+  werte_ent <- reactiveValues()
+  
+  # PROPORTION: When the Sample 50 button is clicked, sample 50 flights and store values
+  observeEvent(input$SampleGo50_ver, {
+    full_sample <- sample(flights,50)
+      
     isolate({
-      werte50$sam50 <- sam50
-      werte50$Ent50 <- c(werte50$Ent50, mean(~Entfernung, data=sam50))
-      werte50$Ver50 <- c(werte50$Ver50, prop(~Verspätet, success = "Ja", data=sam50))
+      werte_ver$sample <- full_sample
+      werte_ver$metric <- c(werte_ver$metric, prop(~Verspätet, success = "Ja", data=full_sample))
+      werte_ver$size <- c(werte_ver$size, "50")
       })
-  }
-})
-
-res500 <- observe({
-  if (input$SampleGo500) {
-    sam500 <- sample(flights,500)
-    
-    isolate({
-      werte500$sam500 <- sam500
-      werte500$Ent500 <- c(werte500$Ent500, mean(~Entfernung, data=sam500))
-      werte500$Ver500 <- c(werte500$Ver500, prop(~Verspätet, success = "Ja", data=sam500))
-    })
-  }
-})
-
-  
-  output$PlotEnt50 <- renderPlot({
-    if (input$SampleGo50) {
-      gf_histogram( ~ Entfernung, data = werte50$sam50,
-                    title = paste0(" Mittelwert Entfernung: ", round(tail(werte50$Ent50,1),2)),
-                    binwidth = 250,
-                    color = 'white',  # White spaces between bars for better separation of bars
-                    fill = '#387F72', # FOM-Blue for corporate design
-                    alpha = .5) %>%   # Transparancy to better read exact values
-      gf_lims(x = xlims) %>%
-      gf_refine(scale_x_continuous(limits = xlims, breaks = seq(xlims[1],xlims[2],250))) %>% # Breaks set manually to better read the exact values of the bars
-      gf_labs(x = 'Entfernung',         
-              y = 'Anzahl Flüge') %>% 
-      gf_theme(theme = theme_bw())    # Black-white theme only little distraction in the background 
-    }
   })
   
-  output$PlotVer50 <- renderPlot({
-    if (input$SampleGo50) {
-      gf_bar( ~ Verspätet, data = werte50$sam50 ,
-              title = paste0(" Anteil Verspätet: ", round(tail(werte50$Ver50,1),2)),
+  # PROPORTION: When the Sample 500 button is clicked, sample 500 flights and store values (in same object)
+  observeEvent(input$SampleGo500_ver, {
+    full_sample <- sample(flights,500)
+    
+    isolate({
+      werte_ver$sample <- full_sample
+      werte_ver$metric <- c(werte_ver$metric, prop(~Verspätet, success = "Ja", data=full_sample))
+      werte_ver$size <- c(werte_ver$size, "500")
+    })
+  })
+  
+  # MEAN: When the Sample 50 button is clicked, sample 50 flights and store values
+  observeEvent(input$SampleGo50_ent, {
+    full_sample <- sample(flights,50)
+    
+    isolate({
+      werte_ent$sample <- full_sample
+      werte_ent$metric <- c(werte_ent$metric, mean(~Entfernung, data=full_sample))
+      werte_ent$size <- c(werte_ent$size, "50")
+    })
+  })
+  
+  # MEAN: When the Sample 500 button is clicked, sample 500 flights and store values (in same object)
+  observeEvent(input$SampleGo500_ent, {
+    full_sample <- sample(flights,500)
+    
+    isolate({
+      werte_ent$sample <- full_sample
+      werte_ent$metric <- c(werte_ent$metric, mean(~Entfernung, data=full_sample))
+      werte_ent$size <- c(werte_ent$size, "500")
+    })
+  })
+
+  
+  
+  # PROPORTION: Plot the original (population) distribution of flights delayed
+  output$PlotOriginalVer <- renderPlot({
+    gf_bar( ~ Verspätet, data = flights,
+            title = paste0("Anzahl Flüge: ",nrow(flights), ", Anteil Verspätet: ", round(verpop,2)),
+            color = 'white',       # White spaces between bars for better separation of bars
+            fill = '#387F72',      # FOM-Blue for corporate design
+            alpha = .5) %>%        # Transparancy to better read exact values
+      gf_labs(x = 'Verspätung',
+              y = 'Anzahl Flüge') %>%
+      gf_theme(theme = theme_bw())   # Black-white theme only little distraction in the background 
+  })
+  
+  # MEAN: Plot the original (population) distribution of flight distance
+  output$PlotOriginalEnt <- renderPlot({
+    gf_histogram( ~ Entfernung, data = flights,
+                  title = paste0("Anzahl Flüge: ",nrow(flights), ", Mittelwert Entfernung: ", round(entpop,2)),
+                  binwidth = 250,       
+                  color = 'white',      # White spaces between bars for better separation of bars
+                  fill = '#387F72',     # FOM-Blue for corporate design
+                  alpha = .5) %>%       # Transparancy to better read exact values
+      gf_lims(x = xlims) %>%
+      gf_refine(scale_x_continuous(limits = xlims, breaks = seq(xlims[1],xlims[2],250))) %>%  # Breaks set manually to better read the exact values of the bars
+      gf_labs(x = 'Entfernung',
+              y = 'Anzahl Flüge') %>%
+      gf_theme(theme = theme_bw())   # Black-white theme only little distraction in the background 
+  })
+  
+  
+  
+  # PROPORTION: Plot proportion in current sample of delayed flights (either 50 or 500 sample)
+  output$PlotSampleVer <- renderPlot({
+    req(werte_ver$sample)
+    
+      gf_bar( ~ Verspätet, data = werte_ver$sample,
+              title = paste0(" Anteil Verspätet: ", round(tail(werte_ver$metric,1),2)),
               color = 'white',        # White spaces between bars for better separation of bars
               fill = '#387F72',       # FOM-Blue for corporate design
               alpha = .5) %>%         # Transparancy to better read exact values
       gf_labs(x = 'Verspätung',        
               y = 'Anzahl Flüge') %>%  
       gf_theme(theme = theme_bw())    # Black-white theme only little distraction in the background 
-    }
   })
   
-  
-  output$PlotEnt500 <- renderPlot({
-    if (input$SampleGo500) {
-      gf_histogram( ~ Entfernung, data = werte500$sam500,
-                    title = paste0(" Mittelwert Entfernung: ", round(tail(werte500$Ent500,1),2)),
-                    binwidth = 250,
-                    color = 'white',   # White spaces between bars for better separation of bars
-                    fill = '#387F72',  # FOM-Blue for corporate design
-                    alpha = .5) %>%    # Transparancy to better read exact values
-        gf_lims(x = xlims) %>%
-        gf_refine(scale_x_continuous(limits = xlims, breaks = seq(xlims[1],xlims[2],250))) %>%  # Breaks set manually to better read the exact values of the bars
-        gf_labs(x = 'Entfernung',
-                y = 'Anzahl Flüge') %>%
-        gf_theme(theme = theme_bw())   # Black-white theme only little distraction in the background 
-    }
-  })
-  
-  output$PlotVer500 <- renderPlot({
-    if (input$SampleGo500) {
-      gf_bar( ~ Verspätet, data = werte500$sam500 ,
-              title = paste0(" Anteil Verspätet: ", round(tail(werte500$Ver500,1),2)),
-              color = 'white',          # White spaces between bars for better separation of bars
-              fill = '#387F72',         # FOM-Blue for corporate design
-              alpha = .5) %>%           # Transparancy to better read exact values
-      gf_labs(x = 'Verspätung',
-              y = 'Anzahl Flüge') %>%
-      gf_theme(theme = theme_bw())      # Black-white theme only little distraction in the background 
-    }
-  })
-
-  output$PlotOriginalEnt <- renderPlot({
-    gf_histogram( ~ Entfernung, data = flights,
-                  title = paste0(" Mittelwert Entfernung: ", round(entpop,2)),
-                  binwidth = 250,       
-                  color = 'white',      # White spaces between bars for better separation of bars
-                  fill = '#387F72',     # FOM-Blue for corporate design
-                  alpha = .5) %>%       # Transparancy to better read exact values
-    gf_lims(x = xlims) %>%
-    gf_refine(scale_x_continuous(limits = xlims, breaks = seq(xlims[1],xlims[2],250))) %>%  # Breaks set manually to better read the exact values of the bars
-    gf_labs(x = 'Entfernung',
-            y = 'Anzahl Flüge') %>%
-    gf_theme(theme = theme_bw())   # Black-white theme only little distraction in the background 
-  })
-  
-  output$PlotOriginalVer <- renderPlot({
-    gf_bar( ~ Verspätet, data = flights,
-            title = paste0(" Anteil Verspätet: ", round(verpop,2)),
-            color = 'white',       # White spaces between bars for better separation of bars
-            fill = '#387F72',      # FOM-Blue for corporate design
-            alpha = .5) %>%        # Transparancy to better read exact values
-    gf_labs(x = 'Verspätung',
-            y = 'Anzahl Flüge') %>%
-    gf_theme(theme = theme_bw())   # Black-white theme only little distraction in the background 
-  })
-  
-
-  output$PlotMeanEnt50 <- renderPlot({
-    if (input$SampleGo50) {
-      p <- gf_dotplot( ~ x, data=data.frame(x=werte50$Ent50),
-                  title = paste0("Anzahl Stichproben: ",length(werte50$Ent50), 
-                                 ", Standardfehler: ", round(sd(werte50$Ent50),2)),
-                  color = '#12342E',        # FOM-Blue for corporate design
-                  fill = '#387F72') %>%     # FOM-Blue for corporate design
-      gf_vline(xintercept = tail(werte50$Ent50,1), col = "red" ) %>%
-      gf_vline(xintercept = entpop, col = "blue") %>%
-      gf_lims(x = xlims2ent50) %>%          # Fixed x-limits to better visualize what happens when new observations join the existing ones
-      gf_labs(x = 'Mittelwert Entfernung',
-              y = 'Häufigkeit') %>%
-      gf_theme(theme = theme_bw())          # Black-white theme only little distraction in the background 
-      
-      p <- p + annotate("text", x = entpop, y = .80, label = "Wahrer Mittelwert (Population)", size = 4)            # Label the vertical line as expectation value from the  population
-      p <- p + annotate("text", x = tail(werte50$Ent50,1), y = .70, label = "Mittelwert der aktuellen SP", size = 4)  # Lable the vertical line as Sample mean 
-      p
-    }
-  })
-  
-  output$PlotMeanVer50 <- renderPlot({
-    if (input$SampleGo50) {
-      p <- gf_dotplot( ~ x, data=data.frame(x=werte50$Ver50),
-                  title = paste0("Anzahl Stichproben: ",length(werte50$Ver50), 
-                                 ", Standardfehler: ", round(sd(werte50$Ver50),2)),
-                  color = '#12342E',     # FOM-Blue for corporate design
-                  fill = '#387F72') %>%  # FOM-Blue for corporate design
-      gf_vline(xintercept = tail(werte50$Ver50,1), col = "red") %>%
+  # PROPORTION: Plot distribution of proportions of delayed flights (sample 50 and 500 together)
+  output$PlotPropsVer <- renderPlot({
+    req(werte_ver$metric)
+    
+    data = data.frame(x=werte_ver$metric,Stichprobenumfang=werte_ver$size)
+    
+    p <- gf_dotplot( ~ x, fill = ~Stichprobenumfang, data=data,
+                     title = paste0("Anzahl Stichproben: ",length(data$x)),
+                     color = 'white',
+                     alpha = .5) %>%  # FOM-Blue for corporate design
+      gf_vline(xintercept = tail(data$x,1), col = "red") %>%
       gf_vline(xintercept = verpop, col = "blue") %>%
-      gf_lims(x = xlims2ver50) %>%       # Fixed x-limits to better visualize what happens when new observations join the existing ones
+      gf_lims(x = xlims_ver50) %>%       # Fixed x-limits to better visualize what happens when new observations join the existing ones
       gf_labs(x = 'Anteil Verspätungen',
               y = 'Häufigkeit') %>%
-      gf_theme(theme = theme_bw())       # Black-white theme only little distraction in the background 
-      
-      p <- p + annotate("text", x = verpop, y = .80, label = "Wahrer Anteil (Population)", size = 4)            # Label the vertical line as expectation value from the  population
-      p <- p + annotate("text", x = tail(werte50$Ver50,1), y = .70, label = "Anteil der aktuellen SP", size = 4)  # Lable the vertical line as Sample mean 
-      p
-    }
+      gf_theme(theme = theme_bw())       # Black-white theme only little distraction in the background
+    
+    p <- p + annotate("text", x = verpop, y = .80, label = "Wahrer Anteil (Population)", size = 4)            # Label the vertical line as expectation value from the  population
+    p <- p + annotate("text", x = tail(data$x,1), y = .70, label = "Anteil der aktuellen SP", size = 4)  # Lable the vertical line as Sample mean
+    p
   })
   
-  output$PlotMeanEnt500 <- renderPlot({
-    if (input$SampleGo500){
-      p <- gf_dotplot( ~ x, data=data.frame(x=werte500$Ent500),
-                title = paste0("Anzahl Stichproben: ",length(werte500$Ent500), 
-                               ", Standardfehler: ", round(sd(werte500$Ent500),2)),
-                color = '#12342E',         # FOM-Blue for corporate design
-                fill = '#387F72') %>%      # FOM-Blue for corporate design
-      gf_vline(xintercept = tail(werte500$Ent500,1), col = "red") %>%
+  
+  
+  # MEAN: Plot distances in current sample of flight distances (either 50 or 500 sample)
+  output$PlotSampleEnt <- renderPlot({
+    req(werte_ent$sample)
+    
+    gf_histogram( ~ Entfernung, data = werte_ent$sample,
+                  title =  paste0(" Mittelwert Entfernung: ", round(tail(werte_ent$metric,1),2)),
+                  binwidth = 250,
+                  color = 'white',        # White spaces between bars for better separation of bars
+                  fill = '#387F72',       # FOM-Blue for corporate design
+                  alpha = .5) %>%         # Transparancy to better read exact values
+                  gf_lims(x = xlims) %>%
+                  gf_refine(scale_x_continuous(limits = xlims, breaks = seq(xlims[1],xlims[2],250))) %>% # Breaks set manually to better read the exact values of the bars
+                  gf_labs(x = 'Entfernung',
+                          y = 'Anzahl Flüge') %>%
+      gf_theme(theme = theme_bw())    # Black-white theme only little distraction in the background 
+  })
+  
+  # MEAN: Plot distribution of means of flight distances (sample 50 and 500 together)
+  output$PlotMeansEnt <- renderPlot({
+    req(werte_ent$metric)
+    
+    data = data.frame(x=werte_ent$metric,Stichprobenumfang=werte_ent$size)
+    
+    p <- gf_dotplot( ~ x, fill = ~Stichprobenumfang, data=data,
+                     title = paste0("Anzahl Stichproben: ",length(data$x)),
+                     color = 'white',
+                     alpha = .5) %>%  # FOM-Blue for corporate design
+      gf_vline(xintercept = tail(data$x,1), col = "red") %>%
       gf_vline(xintercept = entpop, col = "blue") %>%
-      gf_lims(x = xlims2ent500) %>%        # Fixed x-limits to better visualize what happens when new observations join the existing ones
-      gf_labs(x = 'Mittelwert Entfernung',
-              y = 'Häufigkeit') %>%
-      gf_theme(theme = theme_bw())         # Black-white theme only little distraction in the background 
-      
-      p <- p + annotate("text", x = entpop, y = .80, label = "Wahrer Mittelwert (Population)", size = 4)               # Label the vertical line as expectation value from the  population
-      p <- p + annotate("text", x = tail(werte500$Ent500,1), y = .70, label = "Mittelwert der aktuellen SP", size = 4)   # Lable the vertical line as Sample mean 
-      p
-    }
-  })
-  
-  output$PlotMeanVer500 <- renderPlot({
-    if (input$SampleGo500){
-      p <- gf_dotplot( ~ x, data=data.frame(x=werte500$Ver500),
-                title = paste0("Anzahl Stichproben: ",length(werte500$Ver500), 
-                               ", Standardfehler: ", round(sd(werte500$Ver500),2)),
-                color = '#12342E',          # FOM-Blue for corporate design
-                fill = '#387F72') %>%       # FOM-Blue for corporate design
-      gf_vline(xintercept = tail(werte500$Ver500,1), col = "red") %>%
-      gf_vline(xintercept = verpop, col = "blue") %>%
-        gf_lims(x = xlims2ver500) %>%       # Fixed x-limits to better visualize what happens when new observations join the existing ones
+      gf_lims(x = xlims_ent50) %>%       # Fixed x-limits to better visualize what happens when new observations join the existing ones
       gf_labs(x = 'Anteil Verspätungen',
               y = 'Häufigkeit') %>%
-      gf_theme(theme = theme_bw())          # Black-white theme only little distraction in the background 
-      
-      p <- p + annotate("text", x = verpop, y = .80, label = "Wahrer Anteil (Population)", size = 4)               # Label the vertical line as expectation value from the  population
-      p <- p + annotate("text", x = tail(werte500$Ver500,1), y = .70, label = "Anteil der aktuellen SP", size = 4)   # Lable the vertical line as Sample mean 
-      p
-    }
+      gf_theme(theme = theme_bw())       # Black-white theme only little distraction in the background
+    
+    p <- p + annotate("text", x = entpop, y = .80, label = "Wahrer Mittelwert (Population)", size = 4)            # Label the vertical line as expectation value from the  population
+    p <- p + annotate("text", x = tail(data$x,1), y = .70, label = "Mittelwert der aktuellen SP", size = 4)  # Lable the vertical line as Sample mean
+    p
   })
-  
-  
   
 }
 # Run the application 
