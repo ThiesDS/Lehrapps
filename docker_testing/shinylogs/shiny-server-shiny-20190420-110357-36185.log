@@ -1,0 +1,3 @@
+Error in library(mosaic) : there is no package called ‘mosaic’
+Calls: runApp ... sourceUTF8 -> eval -> eval -> ..stacktraceon.. -> library
+Execution halted
